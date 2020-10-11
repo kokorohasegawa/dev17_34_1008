@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>ぐるなびAPI</title>
+</head>
+<body>
+<div>
+    アクセスキーを入力<input id="key" value="" type="text" size="45">
+    <input type="button" id="btn" value="送信"><br>
+    緯度lat: <input type="text" id="lat" value="35.667215">
+    経度lon: <input type="text" id="lon" value="139.713861">
+</div>
+<table id="table">
+    <tr>
+        <th>店舗名</th>
+        <th>営業時間</th>
+    </tr>
+</table>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src='https://www.bing.com/api/maps/mapcontrol?callback=GetMap&key=【ここはご自分のアクセスキーを入力してください】' async defer></script>
+<script src="../BmapQuery-master/js/BmapQuery.js"></script>
+
+<script>
+    //****************************************************************************************
+    // BingMaps&BmapQuery
+    // 現在地情報の取得
+    //****************************************************************************************
+    //Init
+    function GetMap(){
+        //------------------------------------------------------------------------
+        //1. Instance
+        //------------------------------------------------------------------------
+        const map = new Bmap();
+    ​
+        //------------------------------------------------------------------------
+        //2. geolocation: Display Map
+        //   map.geolocation(function(data:object){...});
+        //------------------------------------------------------------------------
+        map.geolocation(function(data) {
+            //location
+            const lat = data.coords.latitude;
+            const lon = data.coords.longitude;
+    ​
+            $('#lat').val(lat);
+            $('#lon').val(lon);
+        });
+    }
+</script>
+
+<script>
+//*****************************************************
+// Click Event
+// ぐるなびAPIへデータRequest → APIサーバーからresponseデータ取得 
+//*****************************************************
+
+
+    $("#btn").on("click", function() {
+        //送信データをObject変数で用意
+        //参考URL:https://api.gnavi.co.jp/api/manual/restsearch/
+
+        const data = {
+            keyid:$("#key").val(),
+            latitude:$("#lat").val(),
+            longitude:$("#lon").val(),
+            range:3,
+            parking:1
+        };
+        //Ajax（非同期通信）
+        axios.get('https://api.gnavi.co.jp/RestSearchAPI/v3/', {
+            params:data
+        })
+        .then(function (response) {
+            //データ受信成功！！showData関数にデータを渡す
+            showData(response.data);
+        }).catch(function (error) {
+            console.log(error);//通信Error
+        }).then(function () {
+            //console.log("Last");//通信OK/Error後に処理を必ずさせたい場合
+        });
+    });
+
+//*****************************************************
+//ぐるなびデータ表示処理
+//*****************************************************
+    function showData(data){
+        //データ確認用
+        console.log(data.rest);
+
+        //データを繰り返し処理で取得
+        const len  = data.rest.length; //データ数を取得
+        for( let i=0; i<len; i++){
+            $("#table").append('<tr><td>' + data.rest[i].name + '</td><td>' + data.rest[i].opentime + '</td></tr>');
+        };
+    }
+
+</script>
+</body>
+</html>
